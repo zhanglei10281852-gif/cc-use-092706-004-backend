@@ -97,12 +97,21 @@ class PetitionRepository(Repository):
         deadline_before: str | None,
         limit: int,
         offset: int,
+        unassigned: str = "include",
     ) -> list[dict]:
+        """unassigned: only=仅未分派；include=未分派与已分派一并返回；exclude=仅已分派。"""
         conditions: list[str] = []
         params: list[Any] = []
         if department_id is not None:
-            conditions.append("p.department_id=?")
+            if unassigned == "include":
+                conditions.append("(p.department_id=? OR p.department_id IS NULL)")
+            else:
+                conditions.append("p.department_id=?")
             params.append(department_id)
+        elif unassigned == "only":
+            conditions.append("p.department_id IS NULL")
+        elif unassigned == "exclude":
+            conditions.append("p.department_id IS NOT NULL")
         if statuses:
             placeholders = ",".join("?" for _ in statuses)
             conditions.append(f"p.status IN ({placeholders})")

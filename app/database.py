@@ -308,6 +308,7 @@ PERMISSIONS = [
     ("affairs.write", "办理事务", "affairs", "write"),
     ("petitions.read", "查看信访", "petitions", "read"),
     ("petitions.write", "办理信访", "petitions", "write"),
+    ("petitions.inbox", "信访收件箱", "petitions", "inbox"),
     ("announcements.write", "维护公告", "announcements", "write"),
     ("audit.read", "查看审计", "audit", "read"),
     ("jobs.run", "执行后台任务", "jobs", "run"),

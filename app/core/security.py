@@ -91,3 +91,10 @@ class Principal:
 
         if not self.can(permission):
             raise PermissionDeniedError(f"缺少权限：{permission}")
+
+    def require_any(self, *permissions: str) -> None:
+        from app.core.errors import PermissionDeniedError
+
+        if not any(self.can(permission) for permission in permissions):
+            joined = " 或 ".join(permissions)
+            raise PermissionDeniedError(f"缺少权限：{joined}")

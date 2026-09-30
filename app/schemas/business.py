@@ -52,6 +52,15 @@ class UrgeRequest(BaseModel):
     reason: str = Field(min_length=1, max_length=1000)
 
 
+class ReassignRequest(BaseModel):
+    department_id: int
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+class RollbackRequest(BaseModel):
+    reason: str | None = Field(default=None, max_length=1000)
+
+
 class MetricWindowRequest(BaseModel):
     started_at: str | None = None
     ended_at: str | None = None
