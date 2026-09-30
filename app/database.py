@@ -296,6 +296,7 @@ CREATE INDEX IF NOT EXISTS idx_compute_interventions_task ON compute_interventio
 '''
 
 PERMISSIONS = [
+    ("*", "全部权限", "*", "*"),
     ("users.read", "查看用户", "users", "read"),
     ("users.write", "维护用户", "users", "write"),
     ("roles.read", "查看角色", "roles", "read"),
@@ -307,6 +308,7 @@ PERMISSIONS = [
     ("affairs.read", "查看事务", "affairs", "read"),
     ("affairs.write", "办理事务", "affairs", "write"),
     ("petitions.read", "查看信访", "petitions", "read"),
+    ("petitions.receive", "收件箱认领", "petitions", "receive"),
     ("petitions.write", "办理信访", "petitions", "write"),
     ("announcements.write", "维护公告", "announcements", "write"),
     ("audit.read", "查看审计", "audit", "read"),
@@ -380,10 +382,21 @@ def init_db() -> None:
             "INSERT OR IGNORE INTO roles(code,name,description,is_system,created_at,updated_at) VALUES('auditor','审计查看员','只读查看业务与审计记录',1,?,?)",
             (now, now),
         )
+        connection.execute(
+            "INSERT OR IGNORE INTO roles(code,name,description,is_system,created_at,updated_at) VALUES('duty','信访值班员','可查看未分派收件箱并认领分派信访件',1,?,?)",
+            (now, now),
+        )
         administrator = connection.execute("SELECT id FROM roles WHERE code='administrator'").fetchone()[0]
         connection.execute(
             "INSERT OR IGNORE INTO role_permissions(role_id,permission_id,granted_at) SELECT ?,id,? FROM permissions",
             (administrator, now),
+        )
+        # 值班员负责未分派收件箱的查看与认领；其他系统角色的权限维持原状，由管理员按需授予。
+        connection.execute(
+            "INSERT OR IGNORE INTO role_permissions(role_id,permission_id,granted_at) "
+            "SELECT r.id,p.id,? FROM roles r JOIN permissions p ON p.code IN ('petitions.read','petitions.receive') "
+            "WHERE r.code='duty'",
+            (now,),
         )
 
 

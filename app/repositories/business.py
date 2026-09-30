@@ -97,12 +97,25 @@ class PetitionRepository(Repository):
         deadline_before: str | None,
         limit: int,
         offset: int,
+        include_unassigned: bool = False,
+        unscoped: bool = False,
     ) -> list[dict]:
         conditions: list[str] = []
         params: list[Any] = []
-        if department_id is not None:
-            conditions.append("p.department_id=?")
-            params.append(department_id)
+        if unscoped:
+            # 管理员全量视图：部门筛选仅作查询条件，不作数据范围收窄。
+            if department_id is not None:
+                conditions.append("p.department_id=?")
+                params.append(department_id)
+        else:
+            ownership: list[str] = []
+            if department_id is not None:
+                ownership.append("p.department_id=?")
+                params.append(department_id)
+            if include_unassigned:
+                ownership.append("p.department_id IS NULL")
+            # 已分派记录立即按部门收紧；未分派记录只对有收件箱权限者额外放行。
+            conditions.append("(" + " OR ".join(ownership) + ")" if ownership else "1=0")
         if statuses:
             placeholders = ",".join("?" for _ in statuses)
             conditions.append(f"p.status IN ({placeholders})")
